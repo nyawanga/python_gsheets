@@ -21,7 +21,7 @@ from collections import OrderedDict
 
 app_path = os.path.dirname(os.path.abspath(__file__))
 base_path = os.path.join(app_path, "../")
-auth_file = os.path.join(base_path, "files/google_auth.json")
+auth_file = os.path.join(base_path, "lib/google_auth.json")
 scope = ['https://spreadsheets.google.com/feeds',
          'https://www.googleapis.com/auth/drive',
          ]
