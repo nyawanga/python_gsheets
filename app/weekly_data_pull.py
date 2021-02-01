@@ -98,7 +98,23 @@ def clean_data(data):
     return new_data, rows, cols
 
 
-def update_data(data, rows, cols, cols_order, start_cell=(2, 1), tab_name="Data", as_df=False):
+def write_to_sheets(data, rows, cols, cols_order, start_cell=(2, 1), tab_name="Data", as_df=False):
+    """
+    Function to post the data to a google sheets.
+        
+    Parameters:
+        data       - list of list
+        rows, cols - integer number of cols and rows in the data
+        cols_order - order of column headers
+        start_cell - the cell to start posting data on the google sheet
+        end_cell   - the cell to end the data
+        tab_name   - the tab to post the data on the google sheet
+        as_df      - whether to post as dataframe
+        
+    Returns:
+        None
+    """
+
     credentials = get_credentials()
     sheet_access = credentials.open_by_key(worksheet_key)
     first_row = start_cell[0]
@@ -107,7 +123,7 @@ def update_data(data, rows, cols, cols_order, start_cell=(2, 1), tab_name="Data"
 
     try:
         tab = sheet_access.worksheet_by_title(tab_name)
-        print("deleting data from range {} ... ".format(start_cell))
+        print(f"deleting data from range {start_cell} ... ")
         print("-" * 100)
         # tab.clear('A{0}:H{1}'.format(first_row, last_row))
         tab.clear(start=start_cell, end=end_cell)                              # set end_cell to None to clear the whole sheet
@@ -117,7 +133,6 @@ def update_data(data, rows, cols, cols_order, start_cell=(2, 1), tab_name="Data"
         # print(col_names)
         print("updating data now ...")
         if as_df:
-            # print("testing")
             data = pd.DataFrame(data, columns=cols_order)
             data = data[col_names]
             # print(data.head(2))
@@ -127,20 +142,33 @@ def update_data(data, rows, cols, cols_order, start_cell=(2, 1), tab_name="Data"
             # tab.update_values(crange='A{0}:H{1}'.format(first_row, last_row), values=data, extend=True)
             tab.update_values(crange=start_cell, values=sort_data, extend=True)
     except pygsheets.exceptions.WorksheetNotFound:
-        print("{} sheet not found".format(tab_name))
+        print(f"{tab_name} sheet not found")
         sys.exit(1)
     except Exception as err:
-        print("{} got when attempting to get the sheet {}".format(err, tab_name))
+        print(f"{err} got when attempting to get the sheet {tab_name}")
     finally:
         print("-" * 100)
 
 
 # incase you want to save output to csv file
-def write_to_csv(data, file_name="data.csv"):
-    with open(file_name, "w", encoding='utf-8') as f:
+def write_to_csv(self, data, outfile="data.csv"):
+    """
+    A function to write data to a file
+
+    Parameters:
+        data      - list of list
+        outfile   - the default name of file to output data to.
+
+    Returns:
+        None
+    """
+
+    with open(outfile, "w", encoding='utf-8') as f:
         import csv
         csv_writer = csv.writer(f, dialect='excel', lineterminator='\n', quoting=csv.QUOTE_NONNUMERIC)
-        [csv_writer.writerow(row) for row in data]
+        print( f"writting to file {outfile}")
+        [ csv_writer.writerow(row) for row in data ]
+        print("done writting file")
 
 
 for worksheet in worksheets:
@@ -152,13 +180,13 @@ for worksheet in worksheets:
     # tab_name = 'data'
     data, cols_order = get_data(sql_script=sql_script)
     data, rows, cols = clean_data(data)
-    print("worksheet: {}, rows :{}, cols:{}".format(worksheet, rows, cols))
+    print(f"worksheet: {worksheet}, rows :{rows}, cols:{cols}")
     print("-" * 100)
     # # time.sleep(10)
     # # print(data)
     # # data = json.dumps(new_data)
     # # write_to_csv(data)
-    update_data(
+    write_to_sheets(
         data,
         rows=rows,
         cols=cols,
